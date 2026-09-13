@@ -1,0 +1,59 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.msg-list {
+  flex: 1;
+  padding: 20rpx;
+  box-sizing: border-box;
+}
+
+.msg-row {
+  display: flex;
+  margin-bottom: 20rpx;
+}
+.row-left  { justify-content: flex-start; }   /* bot 消息靠左 */
+.row-right { justify-content: flex-end; }     /* 用户消息靠右 */
+
+.bubble {
+  max-width: 70%;
+  padding: 16rpx 24rpx;
+  border-radius: 16rpx;
+  font-size: 30rpx;
+  line-height: 1.5;
+  word-break: break-all;
+}
+
+.bubble-bot {
+  background-color: #fff;
+  color: #333;
+  border-top-left-radius: 4rpx;   /* 左上角一个小角，像微信聊天气泡 */
+}
+.bubble-user {
+  background-color: #4A90D9;
+  color: #fff;
+  border-top-right-radius: 4rpx;
+}
+
+.input-bar {
+  display: flex;
+  align-items: center;
+  padding: 16rpx 20rpx;
+  background-color: #f7f7f7;
+  border-top: 1rpx solid #e0e0e0;
+}
+.input {
+  flex: 1;
+  height: 72rpx;
+  padding: 0 20rpx;
+  background-color: #fff;
+  border-radius: 36rpx;
+  font-size: 28rpx;
+}
+.send-btn {
+  margin-left: 16rpx;
+  background-color: #4A90D9;
+  color: #fff;
+}

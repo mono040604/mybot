@@ -1,0 +1,9 @@
+{
+  "providers": {
+    "openai": {
+      "api_key": "在这里填你的智谱 API key",
+      "api_base": "https://open.bigmodel.cn/api/paas/v4",
+      "model": "在这里填你的模型名，如 glm-4-flash"
+    }
+  }
+}

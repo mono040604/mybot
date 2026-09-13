@@ -1,0 +1,30 @@
+# Windows
+[Dd]esktop.ini
+Thumbs.db
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+
+# Node.js
+node_modules/
+
+# ===== 密钥：绝对不能上传（尤其公开仓库）=====
+config.json
+
+# ===== 运行时数据：记忆/会话/向量库，会频繁变化且可能含个人内容 =====
+memory/
+sessions/
+
+# ===== 微信开发者工具私有配置（含本机调试信息）=====
+project.private.config.json
+
+# ===== Python 缓存 =====
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/

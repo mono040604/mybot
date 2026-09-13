@@ -1,0 +1,7 @@
+# 网关运行需要的第三方库（pip 会照着这个清单装）
+# 扫描依据：gateway.py 及其 import 到的 providers/agent/session/bus 里用到的外部库
+fastapi
+uvicorn
+pydantic
+loguru
+httpx

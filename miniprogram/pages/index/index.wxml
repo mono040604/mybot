@@ -1,0 +1,19 @@
+<view class="container">
+  <!-- ① 消息列表：可滚动，自动滚到底部 -->
+  <scroll-view class="msg-list" scroll-y scroll-into-view="{{scrollIntoView}}" scroll-with-animation>
+    <view wx:for="{{messages}}" wx:key="index" id="msg-{{index}}"
+          class="msg-row {{item.role === 'user' ? 'row-right' : 'row-left'}}">
+      <view class="bubble {{item.role === 'user' ? 'bubble-user' : 'bubble-bot'}}">
+        <text>{{item.content}}</text>
+      </view>
+    </view>
+    <view id="msg-bottom"></view>
+  </scroll-view>
+
+  <!-- ② 输入栏 -->
+  <view class="input-bar">
+    <input class="input" placeholder="说点什么..." value="{{inputValue}}"
+           bindinput="onInput" confirm-type="send" bindconfirm="sendMessage" />
+    <button class="send-btn" size="mini" bindtap="sendMessage">发送</button>
+  </view>
+</view>
