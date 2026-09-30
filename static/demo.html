@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>韩语单词复习</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #f5f6fa;
+    color: #1f2937;
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+  }
+  .container { width: 100%; max-width: 520px; padding: 24px 16px 48px; }
+  h1 { font-size: 22px; margin-bottom: 20px; text-align: center; }
+  h2 { font-size: 18px; margin-bottom: 12px; }
+  h3 { font-size: 15px; margin: 16px 0 8px; }
+
+  button {
+    display: inline-block;
+    border: none; border-radius: 10px;
+    padding: 12px 20px; font-size: 16px;
+    cursor: pointer; background: #2563eb; color: #fff;
+  }
+  button:active { transform: scale(0.98); }
+  button:disabled { opacity: 0.6; cursor: default; }
+  button.ghost { background: transparent; color: #2563eb; border: 2px solid #2563eb; }
+  button.danger { background: #ef4444; }
+  button.block { display: block; width: 100%; margin-bottom: 12px; }
+  button.small { padding: 8px 14px; font-size: 14px; }
+
+  input {
+    display: block; width: 100%;
+    margin-bottom: 12px; padding: 12px 14px;
+    font-size: 16px; border: 2px solid #e5e7eb; border-radius: 10px;
+  }
+  input:focus { outline: none; border-color: #2563eb; }
+
+  .card {
+    background: #fff; border: 2px solid #e5e7eb; border-radius: 12px;
+    padding: 16px; margin-bottom: 16px;
+  }
+  .msg { margin-top: 12px; color: #6b7280; font-size: 14px; line-height: 1.5; }
+  .back { margin-bottom: 12px; }
+
+  /* 复习题 */
+  .progress { height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden; margin-bottom: 8px; }
+  #progressBar { height: 100%; background: #2563eb; border-radius: 4px; transition: width .3s; width: 0; }
+  #counter { font-size: 13px; color: #6b7280; margin-bottom: 16px; text-align: center; }
+  #prompt { font-size: 20px; font-weight: 600; margin-bottom: 20px; text-align: center; line-height: 1.5; }
+  .badge {
+    display: inline-block; background: #dbeafe; color: #2563eb;
+    font-size: 12px; font-weight: 500; padding: 2px 8px;
+    border-radius: 999px; vertical-align: middle; margin-right: 4px;
+  }
+  .option {
+    display: block; width: 100%; margin-bottom: 12px; padding: 16px;
+    font-size: 18px; background: #fff; border: 2px solid #e5e7eb;
+    color: #1f2937; border-radius: 12px; text-align: center;
+  }
+  .option.correct { background: #dcfce7; border-color: #22c55e; color: #15803d; }
+  .option.wrong { background: #fee2e2; border-color: #ef4444; color: #b91c1c; }
+  #feedback { margin-top: 12px; font-size: 14px; color: #6b7280; text-align: center; }
+
+  .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 16px 0; text-align: center; }
+  .stat-card { background: #fff; border: 2px solid #e5e7eb; border-radius: 12px; padding: 16px 8px; }
+  .stat-card.full { grid-column: 1 / -1; }
+  .stat-value { font-size: 28px; font-weight: 700; }
+  .stat-label { font-size: 14px; color: #1f2937; margin-top: 4px; }
+  .stat-hint { font-size: 12px; color: #9ca3af; margin-top: 4px; }
+
+  /* 词库 */
+  .word-row {
+    display: flex; justify-content: space-between; align-items: center;
+    background: #fff; border: 2px solid #e5e7eb; border-radius: 12px;
+    padding: 12px 16px; margin-bottom: 10px;
+  }
+  .word-text { flex: 1; }
+  .word-cn { font-size: 16px; font-weight: 600; }
+  .word-kor { font-size: 15px; color: #4b5563; margin-left: 8px; }
+  .word-extra { display: block; font-size: 12px; color: #9ca3af; margin-top: 2px; }
+  .word-actions button { margin-left: 8px; }
+
+  /* 聊天 */
+  #chatLog {
+    background: #fff; border: 2px solid #e5e7eb; border-radius: 12px;
+    padding: 12px; height: 320px; overflow-y: auto; margin-bottom: 12px;
+  }
+  .bubble { max-width: 80%; padding: 10px 14px; border-radius: 12px; margin-bottom: 8px; white-space: pre-wrap; word-break: break-word; }
+  .bubble.user { background: #2563eb; color: #fff; margin-left: auto; }
+  .bubble.bot { background: #e5e7eb; color: #1f2937; }
+  .bubble.error { background: #fee2e2; color: #b91c1c; }
+  #chatInputRow { display: flex; gap: 8px; }
+  #chatInputRow input { flex: 1; margin-bottom: 0; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>韩语单词复习</h1>
+
+  <!-- 登录 -->
+  <div id="login">
+    <h2>登录</h2>
+    <input id="username" placeholder="用户名" autocomplete="username">
+    <input id="password" type="password" placeholder="密码" autocomplete="current-password">
+    <button class="block" onclick="login()">登录</button>
+    <p class="msg" id="loginMsg"></p>
+  </div>
+
+  <!-- 首页：两个入口 -->
+  <div id="home" style="display:none">
+    <h2 id="welcome"></h2>
+    <button class="block" onclick="openChat()">💬 LLM 对话</button>
+    <button class="block" id="secondBtn"></button>
+    <button class="block ghost" onclick="logout()">退出登录</button>
+  </div>
+
+  <!-- LLM 对话 -->
+  <div id="chat" style="display:none">
+    <button class="ghost back" onclick="goHome()">← 返回</button>
+    <h2>LLM 对话</h2>
+    <div id="chatLog"></div>
+    <div id="chatInputRow">
+      <input id="chatInput" placeholder="输入消息…">
+      <button onclick="sendChat()">发送</button>
+    </div>
+  </div>
+
+  <!-- 单词复习（学生） -->
+  <div id="review" style="display:none">
+    <button class="ghost back" onclick="goHome()">← 返回</button>
+    <h2>单词复习</h2>
+    <button class="block" onclick="startReview()">开始复习</button>
+
+    <div id="quiz" style="display:none">
+      <div class="progress"><div id="progressBar"></div></div>
+      <div id="counter"></div>
+      <div id="prompt"></div>
+      <div id="options"></div>
+      <div id="feedback"></div>
+      <button id="nextBtn" class="block" onclick="next()" style="display:none">下一题</button>
+    </div>
+
+    <div id="result" style="display:none">
+      <h3>🎉 本轮完成</h3>
+      <p class="msg" id="resultStats"></p>
+      <div class="stats-grid" id="statsGrid"></div>
+      <button class="block" onclick="startReview()">再来一轮</button>
+    </div>
+  </div>
+
+  <!-- 词库管理（管理员） -->
+  <div id="manage" style="display:none">
+    <button class="ghost back" onclick="goHome()">← 返回</button>
+    <h2>词库管理</h2>
+
+    <div class="card">
+      <h3>添加单词</h3>
+      <input id="wCn" placeholder="中文">
+      <input id="wKor" placeholder="韩文">
+      <input id="wExtra" placeholder="补充说明（可选）">
+      <input id="wTag" placeholder="词库标签（如：基础词汇）">
+      <button class="block" onclick="addWord()">添加</button>
+    </div>
+
+    <h3>现有词库</h3>
+    <button class="block ghost" onclick="loadWords()">刷新词库</button>
+    <div id="wordList"></div>
+    <p class="msg" id="manageMsg"></p>
+  </div>
+</div>
+
+<script>
+// ===== 全局状态：登录信息来自 localStorage（刷新不丢） =====
+let token = localStorage.getItem("token") || "";
+let role = localStorage.getItem("role") || "";
+let studentId = localStorage.getItem("student_id") || "";
+
+let batch = [];        // 本轮复习的词
+let index = 0;
+let correctCount = 0;
+let currentWords = []; // 词库管理用的缓存
+
+// 聊天会话键：学生用自己的 student_id，管理员统一用 "manager"
+function chatSessionKey() {
+  return studentId ? String(studentId) : "manager";
+}
+
+// 需要身份的请求都带上 Authorization 头（「带工牌敲门」）
+function authHeaders() {
+  return {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer " + token
+  };
+}
+
+// 防 XSS：把后端/LLM 返回的文本当纯文本插进 innerHTML 前先转义
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[c]));
+}
+
+// ===== 视图切换 =====
+function show(viewId) {
+  ["login", "home", "chat", "review", "manage"].forEach(id => {
+    document.getElementById(id).style.display = (id === viewId) ? "block" : "none";
+  });
+}
+
+function goHome() { showHome(); }
+function openChat() { show("chat"); }
+function openReview() { show("review"); }
+function openManage() { show("manage"); loadWords(); }
+
+// 页面加载：有 token 直接进首页，否则去登录
+function boot() {
+  if (token) showHome();
+  else show("login");
+}
+
+// ===== 登录 / 退出 =====
+async function login() {
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value;
+  const msg = document.getElementById("loginMsg");
+  if (!username || !password) { msg.textContent = "请填写用户名和密码"; return; }
+  msg.textContent = "登录中…";
+  try {
+    const resp = await fetch("/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password })
+    });
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok) {
+      msg.textContent = "❌ " + (data.detail || "登录失败");
+      return;
+    }
+    token = data.token;
+    role = data.role;
+    studentId = data.student_id == null ? "" : String(data.student_id);
+    localStorage.setItem("token", token);
+    localStorage.setItem("role", role);
+    localStorage.setItem("student_id", studentId);
+    document.getElementById("password").value = "";
+    showHome();
+  } catch (e) {
+    msg.textContent = "❌ 出错：" + e.message;
+  }
+}
+
+function logout() {
+  localStorage.removeItem("token");
+  localStorage.removeItem("role");
+  localStorage.removeItem("student_id");
+  token = ""; role = ""; studentId = "";
+  show("login");
+}
+
+// 首页：按角色显示不同的第二个按钮
+function showHome() {
+  const roleText = role === "manager" ? "管理员" : "学生";
+  document.getElementById("welcome").textContent = "你好，当前身份：" + roleText;
+  const secondBtn = document.getElementById("secondBtn");
+  if (role === "manager") {
+    secondBtn.textContent = "📚 词库管理";
+    secondBtn.onclick = openManage;
+  } else {
+    secondBtn.textContent = "📖 单词复习";
+    secondBtn.onclick = openReview;
+  }
+  show("home");
+}
+
+// ===== LLM 对话 =====
+async function sendChat() {
+  const input = document.getElementById("chatInput");
+  const text = input.value.trim();
+  if (!text) return;
+  const log = document.getElementById("chatLog");
+  log.innerHTML += '<div class="bubble user">' + escapeHtml(text) + '</div>';
+  input.value = "";
+  log.scrollTop = log.scrollHeight;
+  try {
+    const resp = await fetch("/chat", {
+      method: "POST",
+      headers: authHeaders(),
+      body: JSON.stringify({ session_key: chatSessionKey(), content: text })
+    });
+    const data = await resp.json();
+    log.innerHTML += '<div class="bubble bot">' + escapeHtml(data.content || "") + '</div>';
+  } catch (e) {
+    log.innerHTML += '<div class="bubble bot error">❌ ' + escapeHtml(e.message) + '</div>';
+  }
+  log.scrollTop = log.scrollHeight;
+}
+
+// ===== 单词复习（学生） =====
+async function startReview() {
+  if (!studentId) { alert("该账号未绑定学生，请联系管理员"); return; }
+  try {
+    const resp = await fetch(`/students/${studentId}/batch`, { headers: authHeaders() });
+    batch = await resp.json();
+  } catch (e) {
+    alert("拉取复习题失败：" + e.message);
+    return;
+  }
+  if (!batch.length) {
+    alert("没有待复习的词（可能都答过/归档了）。");
+    return;
+  }
+  index = 0;
+  correctCount = 0;
+  document.getElementById("quiz").style.display = "block";
+  document.getElementById("result").style.display = "none";
+  showQuestion();
+}
+
+async function showQuestion() {
+  const word = batch[index];
+  const oResp = await fetch(`/words/${word.word_id}/options`, { headers: authHeaders() });
+  const options = await oResp.json();
+  const direction = Math.random() < 0.5 ? "kor_to_cn" : "cn_to_kor";
+
+  document.getElementById("counter").textContent = (index + 1) + " / " + batch.length;
+  document.getElementById("progressBar").style.width = ((index + 1) / batch.length * 100) + "%";
+
+  const badge = word.kind === "new" ? "新词" : "复习";
+  const prompt = direction === "kor_to_cn"
+    ? "「" + word.kor_text + "」的中文是？"
+    : "「" + word.cn_text + "」的韩语是？";
+  document.getElementById("prompt").innerHTML = '<span class="badge">' + badge + '</span>' + escapeHtml(prompt);
+
+  const optionKey = direction === "kor_to_cn" ? "cn_text" : "kor_text";
+  const shuffled = [...options].sort(() => Math.random() - 0.5);
+
+  const optDiv = document.getElementById("options");
+  optDiv.innerHTML = "";
+  shuffled.forEach(opt => {
+    const b = document.createElement("button");
+    b.className = "option";
+    b.textContent = opt[optionKey];
+    b.dataset.wordId = opt.word_id;
+    b.onclick = () => answer(opt.word_id, b, word, direction);
+    optDiv.appendChild(b);
+  });
+
+  document.getElementById("feedback").textContent = "";
+  document.getElementById("nextBtn").style.display = "none";
+}
+
+async function answer(clickedWordId, btn, word, direction) {
+  if (btn.disabled) return;
+  const isCorrect = (clickedWordId === word.word_id);
+  if (isCorrect) correctCount++;
+
+  document.querySelectorAll(".option").forEach(b => b.disabled = true);
+
+  if (isCorrect) {
+    btn.classList.add("correct");
+  } else {
+    btn.classList.add("wrong");
+    document.querySelectorAll(".option").forEach(b => {
+      if (Number(b.dataset.wordId) === word.word_id) b.classList.add("correct");
+    });
+  }
+
+  const correctText = direction === "kor_to_cn" ? word.cn_text : word.kor_text;
+  document.getElementById("feedback").textContent =
+    (isCorrect ? "✅ 答对了！" : "❌ 答错了，正确答案：" + correctText)
+    + (word.extra_info ? "　📌 " + word.extra_info : "");
+
+  try {
+    await fetch(`/students/${studentId}/answers`, {
+      method: "POST",
+      headers: authHeaders(),
+      body: JSON.stringify({ word_id: word.word_id, is_correct: isCorrect, word_version: word.version })
+    });
+  } catch (e) { /* 记录失败也继续，不卡死 */ }
+
+  const nextBtn = document.getElementById("nextBtn");
+  nextBtn.textContent = (index === batch.length - 1) ? "查看结果" : "下一题";
+  nextBtn.style.display = "block";
+}
+
+function next() {
+  index++;
+  if (index >= batch.length) {
+    document.getElementById("quiz").style.display = "none";
+    document.getElementById("result").style.display = "block";
+    document.getElementById("resultStats").textContent = "答对 " + correctCount + " / " + batch.length + " 题";
+    loadStats();
+  } else {
+    showQuestion();
+  }
+}
+
+async function loadStats() {
+  const resp = await fetch(`/students/${studentId}/stats`, { headers: authHeaders() });
+  const data = await resp.json();
+  renderStats(data);
+}
+
+function renderStats(data) {
+  const items = [
+    { label: "新词", value: data.new_count, color: "#2563eb", hint: "还没答过的词" },
+    { label: "学习中", value: data.learning_count, color: "#f59e0b", hint: "已答过、没掌握" },
+    { label: "到期复习", value: data.due_count, color: "#ef4444", hint: "今天该复习" },
+    { label: "已掌握", value: data.mastered_count, color: "#22c55e", hint: "已达归档线" },
+    { label: "总复习次数", value: data.total_reviews, color: "#6b7280", hint: "累计作答", full: true },
+  ];
+  document.getElementById("statsGrid").innerHTML = items.map(it => `
+    <div class="stat-card${it.full ? " full" : ""}" style="border-color:${it.color}">
+      <div class="stat-value" style="color:${it.color}">${it.value}</div>
+      <div class="stat-label">${it.label}</div>
+      <div class="stat-hint">${it.hint}</div>
+    </div>
+  `).join("");
+}
+
+// ===== 词库管理（管理员） =====
+async function loadWords() {
+  const msg = document.getElementById("manageMsg");
+  msg.textContent = "加载中…";
+  try {
+    const resp = await fetch("/words");
+    currentWords = await resp.json();
+    const list = document.getElementById("wordList");
+    if (!currentWords.length) {
+      list.innerHTML = "<p class='msg'>词库为空</p>";
+      msg.textContent = "词库为空";
+      return;
+    }
+    list.innerHTML = currentWords.map(w => `
+      <div class="word-row">
+        <div class="word-text">
+          <span class="word-cn">${escapeHtml(w.cn_text)}</span>
+          <span class="word-kor">${escapeHtml(w.kor_text)}</span>
+          ${w.extra_info ? `<span class="word-extra">📌 ${escapeHtml(w.extra_info)}</span>` : ""}
+        </div>
+        <div class="word-actions">
+          <button class="small" onclick="editWord(${w.word_id})">改</button>
+          <button class="small danger" onclick="deleteWord(${w.word_id})">删</button>
+        </div>
+      </div>
+    `).join("");
+    msg.textContent = "共 " + currentWords.length + " 个词";
+  } catch (e) {
+    msg.textContent = "❌ 加载失败：" + e.message;
+  }
+}
+
+function findWord(id) {
+  return currentWords.find(w => w.word_id === id);
+}
+
+async function addWord() {
+  const cn = document.getElementById("wCn").value.trim();
+  const kor = document.getElementById("wKor").value.trim();
+  const extra = document.getElementById("wExtra").value.trim();
+  const tag = document.getElementById("wTag").value.trim();
+  const msg = document.getElementById("manageMsg");
+  if (!cn || !kor || !tag) { msg.textContent = "中文、韩文、词库标签必填"; return; }
+  try {
+    const resp = await fetch("/words", {
+      method: "POST",
+      headers: authHeaders(),
+      body: JSON.stringify({ cn_text: cn, kor_text: kor, extra_info: extra, library_tag: tag })
+    });
+    const data = await resp.json().catch(() => ({}));
+    if (resp.ok) {
+      document.getElementById("wCn").value = "";
+      document.getElementById("wKor").value = "";
+      document.getElementById("wExtra").value = "";
+      msg.textContent = "✅ 已添加";
+    } else {
+      msg.textContent = "❌ 添加失败：" + (data.detail || resp.status);
+    }
+  } catch (e) {
+    msg.textContent = "❌ 添加失败：" + e.message;
+  }
+  loadWords();
+}
+
+async function editWord(word_id) {
+  const w = findWord(word_id);
+  if (!w) return;
+  const cn = prompt("新的中文：", w.cn_text);
+  if (cn === null) return;
+  const kor = prompt("新的韩文：", w.kor_text);
+  if (kor === null) return;
+  const extra = prompt("补充说明（留空=清空）：", w.extra_info || "");
+  if (extra === null) return;
+
+  const msg = document.getElementById("manageMsg");
+  try {
+    const resp = await fetch(`/words/${word_id}`, {
+      method: "PUT",
+      headers: authHeaders(),
+      body: JSON.stringify({ cn_text: cn, kor_text: kor, extra_info: extra })
+    });
+    const data = await resp.json().catch(() => ({}));
+    msg.textContent = resp.ok
+      ? "✅ 已更新"
+      : "❌ 更新失败：" + (data.detail || resp.status);
+  } catch (e) {
+    msg.textContent = "❌ 更新失败：" + e.message;
+  }
+  loadWords();
+}
+
+async function deleteWord(word_id) {
+  if (!confirm("确定删除这个词？")) return;
+  const msg = document.getElementById("manageMsg");
+  try {
+    const resp = await fetch(`/words/${word_id}`, {
+      method: "DELETE",
+      headers: authHeaders()
+    });
+    const data = await resp.json().catch(() => ({}));
+    msg.textContent = resp.ok
+      ? "✅ 已删除"
+      : "❌ 删除失败：" + (data.detail || resp.status);
+  } catch (e) {
+    msg.textContent = "❌ 删除失败：" + e.message;
+  }
+  loadWords();
+}
+
+boot();
+</script>
+</body>
+</html>
